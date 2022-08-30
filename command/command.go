@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-// flag parser
+// ParseArgs uses os.Args and parses the flags provided. If the flags(n) given are 0=n<2 then we print the usage to stdout, else we parse, assert and return the args
 func ParseArgs() ([]string, bool) {
 	if len(os.Args) <= 1 {
 		Usage()
@@ -38,6 +38,7 @@ func ParseArgs() ([]string, bool) {
 
 }
 
+// Print the basic usage on stdout
 func Usage() {
 	fmt.Println(
 		`
@@ -57,6 +58,7 @@ func Usage() {
 
 }
 
+// Validates that a given directory, dir, is valid
 func validateDir(dir string) bool {
 	_, err := os.ReadDir(dir)
 

@@ -22,23 +22,26 @@ type AnalyzedFile struct {
 	Content    *os.File
 	Read       string
 	LineNumber int
-	Ok         bool
 }
 
+// Print to stdout the info of the AnalyzedFile
+// e.x
+//
+//	fileName
+//	lineNumber: foundText
 func (f *AnalyzedFile) GetInfo() {
-	// return file info
 	fileName := color.YellowString(f.FileName)
 	lineNo := color.GreenString(fmt.Sprintf("%v", f.LineNumber))
 	fmt.Printf("\n%s\n%s:%s\n", fileName, lineNo, f.Read)
 }
 
-// We'll make a function NewLocator that takes the directory and will init a locator
+// Initializes a new Locator and returns a pointer to it. Supply "dir" with the desired base directory
 func NewLocator(dir string) *Locator {
 	loc := Locator{BaseDir: dir}
 	return &loc
 }
 
-// We'll make a function that will search through the directory given a desired string
+// Dig recursively searches through a directory and it's files to find the given string "text"
 func (l *Locator) Dig(text string) {
 	// Find all the subdirs inside the base dir
 	dirFs, err := ioutil.ReadDir(l.BaseDir)
@@ -99,7 +102,7 @@ func runDig(locator *Locator, text string, wg *sync.WaitGroup) {
 	locator.Dig(text)
 }
 
-// We'll make a function called Analyze that opens a file and asserts whether a given string is inside that file and returns the opened file ptr along with a bool value indicating the validity of the file
+// Use Analyze to open and scan the given file, fileName, and assert whether it contains the given string, text. If it does it is accumulated to a slice of AnalyzedFile and later returned
 func (l *Locator) Analyze(fileName string, text string) []AnalyzedFile {
 	file, err := os.Open(l.BaseDir + "/" + fileName)
 
@@ -130,7 +133,7 @@ func (l *Locator) Analyze(fileName string, text string) []AnalyzedFile {
 	// }
 
 	scanner := bufio.NewScanner(file)
-	lineNo := 0
+	lineNo := 1
 	var files []AnalyzedFile
 
 	for scanner.Scan() {
@@ -145,7 +148,7 @@ func (l *Locator) Analyze(fileName string, text string) []AnalyzedFile {
 
 		if exists {
 			resString := strings.Replace(line, text, color.RedString(text), -1)
-			files = append(files, AnalyzedFile{FileName: fileName, Content: file, Read: resString, LineNumber: lineNo, Ok: true})
+			files = append(files, AnalyzedFile{FileName: fileName, Content: file, Read: resString, LineNumber: lineNo})
 		}
 
 		lineNo++

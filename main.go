@@ -1,7 +1,7 @@
 package main
 
 import (
-	command "github.com/dpouris/grip/cli"
+	command "github.com/dpouris/grip/command"
 	"github.com/dpouris/grip/locator"
 )
 

@@ -1,9 +1,8 @@
 package main
 
 import (
-	command "mgrep/cli"
-	"mgrep/locator"
-	"os"
+	command "github.com/dpouris/grip/cli"
+	"github.com/dpouris/grip/locator"
 )
 
 func main() {
@@ -13,7 +12,7 @@ func main() {
 	args, ok = command.ParseArgs()
 
 	if !ok {
-		os.Exit(1)
+		return
 	}
 
 	searchString := args[0]

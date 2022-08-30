@@ -7,11 +7,17 @@ import (
 
 // flag parser
 func ParseArgs() ([]string, bool) {
+	if len(os.Args) <= 1 {
+		Usage()
+		os.Exit(0)
+	}
+
 	args := os.Args[1:]
 
 	if args[0] == "usage" {
 		Usage()
 		os.Exit(0)
+		return nil, false
 	}
 
 	if len(args) < 2 {
@@ -38,7 +44,7 @@ func Usage() {
 		
   Usage:
   
- 	mgrep <searchString> ( <searchDir> | . )
+ 	grip <searchString> ( <searchDir> | . )
 
 	- searchString	  The desired text you want to search for
 

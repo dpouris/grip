@@ -1,4 +1,10 @@
 #!/bin/sh
 
+# build binary
+go build -o out/
+
+# make bin dir in home and copy binary into it
 mkdir ~/bin && cp out/grip ~/bin/grip
-echo 'function grip() { ~/bin/grip $1 $2 }' >> ~/.zshrc
+
+# create grip function and add to shell rc
+echo 'function grip() { ~/bin/grip $1 $2 }' >> ~/.$1rc

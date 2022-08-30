@@ -29,7 +29,7 @@ func (f *AnalyzedFile) GetInfo() {
 	// return file info
 	fileName := color.YellowString(f.FileName)
 	lineNo := color.GreenString(fmt.Sprintf("%v", f.LineNumber))
-	fmt.Printf("\nFilename: %s\nLine Number: %s\nFound: %v\n", fileName, lineNo, f.Read)
+	fmt.Printf("\n%s\n%s:%s\n", fileName, lineNo, f.Read)
 }
 
 // We'll make a function NewLocator that takes the directory and will init a locator
@@ -58,7 +58,7 @@ func (l *Locator) Dig(text string) {
 		files = append(files, file.Name())
 	}
 
-	fileCh := make(chan *AnalyzedFile, len(files))
+	fileCh := make(chan []AnalyzedFile, len(files))
 	wg := sync.WaitGroup{}
 
 	wg.Add(len(files))
@@ -69,8 +69,10 @@ func (l *Locator) Dig(text string) {
 	wg.Wait()
 	close(fileCh)
 
-	for file := range fileCh {
-		file.GetInfo()
+	for files := range fileCh {
+		for _, file := range files {
+			file.GetInfo()
+		}
 	}
 
 	for _, dir := range dirs {
@@ -84,17 +86,11 @@ func (l *Locator) Dig(text string) {
 	wg.Wait()
 }
 
-func runAnalyze(locator *Locator, fileName, text string, ch chan<- *AnalyzedFile, wg *sync.WaitGroup) {
-	file := locator.Analyze(fileName, text)
+func runAnalyze(locator *Locator, fileName, text string, ch chan<- []AnalyzedFile, wg *sync.WaitGroup) {
+	files := locator.Analyze(fileName, text)
 	defer wg.Done()
 
-	if !file.Ok {
-		// Handle not found
-		// fmt.Printf("Not found in %s\n", fileName)
-		return
-	}
-
-	ch <- file
+	ch <- files
 }
 
 func runDig(locator *Locator, text string, wg *sync.WaitGroup) {
@@ -104,12 +100,12 @@ func runDig(locator *Locator, text string, wg *sync.WaitGroup) {
 }
 
 // We'll make a function called Analyze that opens a file and asserts whether a given string is inside that file and returns the opened file ptr along with a bool value indicating the validity of the file
-func (l *Locator) Analyze(fileName string, text string) *AnalyzedFile {
+func (l *Locator) Analyze(fileName string, text string) []AnalyzedFile {
 	file, err := os.Open(l.BaseDir + "/" + fileName)
 
 	if err != nil {
 		fmt.Printf("Path \"%s\" is not valid\n", fileName)
-		return &AnalyzedFile{}
+		return []AnalyzedFile{}
 	}
 
 	// old way
@@ -135,6 +131,7 @@ func (l *Locator) Analyze(fileName string, text string) *AnalyzedFile {
 
 	scanner := bufio.NewScanner(file)
 	lineNo := 0
+	var files []AnalyzedFile
 
 	for scanner.Scan() {
 
@@ -148,11 +145,11 @@ func (l *Locator) Analyze(fileName string, text string) *AnalyzedFile {
 
 		if exists {
 			resString := strings.Replace(line, text, color.RedString(text), -1)
-			return &AnalyzedFile{FileName: fileName, Content: file, Read: resString, LineNumber: lineNo, Ok: true}
+			files = append(files, AnalyzedFile{FileName: fileName, Content: file, Read: resString, LineNumber: lineNo, Ok: true})
 		}
 
 		lineNo++
 	}
 
-	return &AnalyzedFile{}
+	return files
 }

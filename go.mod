@@ -1,4 +1,4 @@
-module mgrep
+module github.com/dpouris/grip
 
 go 1.19
 

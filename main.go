@@ -6,19 +6,14 @@ import (
 )
 
 func main() {
-	var args []string
-	var ok bool
-
-	args, ok = command.ParseArgs()
+	args, ok := command.ParseArgs()
 
 	if !ok {
 		return
 	}
 
-	searchString := args[0]
-	searchDir := args[1]
+	locator := locator.NewLocator(args.Directory)
+	locator.Options = args.Options
 
-	locator := locator.NewLocator(searchDir)
-
-	locator.Dig(searchString)
+	locator.Dig(args.SearchString)
 }

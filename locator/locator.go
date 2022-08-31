@@ -15,13 +15,18 @@ import (
 
 type Locator struct {
 	BaseDir string
+	Options map[string]bool
+}
+type AnalyzedFile struct {
+	FilePath  string
+	Content   *os.File
+	Locations []Location
+	Ok        bool
 }
 
-type AnalyzedFile struct {
-	FileName   string
-	Content    *os.File
-	Read       string
-	LineNumber int
+type Location struct {
+	LineNo   int
+	Contents string
 }
 
 // Print to stdout the info of the AnalyzedFile
@@ -30,9 +35,12 @@ type AnalyzedFile struct {
 //	fileName
 //	lineNumber: foundText
 func (f *AnalyzedFile) GetInfo() {
-	fileName := color.YellowString(f.FileName)
-	lineNo := color.GreenString(fmt.Sprintf("%v", f.LineNumber))
-	fmt.Printf("\n%s\n%s:%s\n", fileName, lineNo, f.Read)
+	filePath := color.YellowString(f.FilePath)
+	fmt.Printf("\n%s\n", filePath)
+	for _, loc := range f.Locations {
+		lineNo := color.GreenString(fmt.Sprintf("%v", loc.LineNo))
+		fmt.Printf("%s:%s\n", lineNo, loc.Contents)
+	}
 }
 
 // Initializes a new Locator and returns a pointer to it. Supply "dir" with the desired base directory
@@ -54,6 +62,9 @@ func (l *Locator) Dig(text string) {
 	var dirs []string
 	for _, file := range dirFs {
 		if file.IsDir() {
+			if !l.Options["-h"] && file.Name()[0] == '.' {
+				continue
+			}
 			dirs = append(dirs, file.Name())
 			continue
 		}
@@ -61,7 +72,7 @@ func (l *Locator) Dig(text string) {
 		files = append(files, file.Name())
 	}
 
-	fileCh := make(chan []AnalyzedFile, len(files))
+	fileCh := make(chan AnalyzedFile, len(files))
 	wg := sync.WaitGroup{}
 
 	wg.Add(len(files))
@@ -72,10 +83,8 @@ func (l *Locator) Dig(text string) {
 	wg.Wait()
 	close(fileCh)
 
-	for files := range fileCh {
-		for _, file := range files {
-			file.GetInfo()
-		}
+	for file := range fileCh {
+		file.GetInfo()
 	}
 
 	for _, dir := range dirs {
@@ -89,11 +98,15 @@ func (l *Locator) Dig(text string) {
 	wg.Wait()
 }
 
-func runAnalyze(locator *Locator, fileName, text string, ch chan<- []AnalyzedFile, wg *sync.WaitGroup) {
-	files := locator.Analyze(fileName, text)
+func runAnalyze(locator *Locator, fileName, text string, ch chan<- AnalyzedFile, wg *sync.WaitGroup) {
+	file := locator.Analyze(fileName, text)
 	defer wg.Done()
 
-	ch <- files
+	if !file.Ok {
+		return
+	}
+
+	ch <- file
 }
 
 func runDig(locator *Locator, text string, wg *sync.WaitGroup) {
@@ -103,12 +116,12 @@ func runDig(locator *Locator, text string, wg *sync.WaitGroup) {
 }
 
 // Use Analyze to open and scan the given file, fileName, and assert whether it contains the given string, text. If it does it is accumulated to a slice of AnalyzedFile and later returned
-func (l *Locator) Analyze(fileName string, text string) []AnalyzedFile {
+func (l *Locator) Analyze(fileName string, text string) AnalyzedFile {
 	file, err := os.Open(l.BaseDir + "/" + fileName)
 
 	if err != nil {
 		fmt.Printf("Path \"%s\" is not valid\n", fileName)
-		return []AnalyzedFile{}
+		return AnalyzedFile{}
 	}
 
 	// old way
@@ -134,7 +147,7 @@ func (l *Locator) Analyze(fileName string, text string) []AnalyzedFile {
 
 	scanner := bufio.NewScanner(file)
 	lineNo := 1
-	var files []AnalyzedFile
+	var locations []Location
 
 	for scanner.Scan() {
 
@@ -148,11 +161,18 @@ func (l *Locator) Analyze(fileName string, text string) []AnalyzedFile {
 
 		if exists {
 			resString := strings.Replace(line, text, color.RedString(text), -1)
-			files = append(files, AnalyzedFile{FileName: fileName, Content: file, Read: resString, LineNumber: lineNo})
+			loc := Location{LineNo: lineNo, Contents: resString}
+			locations = append(locations, loc)
 		}
 
 		lineNo++
 	}
 
-	return files
+	analyzedFile := AnalyzedFile{FilePath: l.BaseDir + "/" + fileName, Content: file, Locations: locations}
+
+	if len(analyzedFile.Locations) > 0 {
+		analyzedFile.Ok = true
+	}
+
+	return analyzedFile
 }

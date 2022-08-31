@@ -3,7 +3,6 @@ package locator
 import (
 	"bufio"
 	"fmt"
-	"io/fs"
 	"os"
 	"strings"
 	"sync"
@@ -12,41 +11,6 @@ import (
 )
 
 // Locator will be supplied with a directory as a string. We'll use the directory to recusrively search for a file that contains a given string
-
-type Locator struct {
-	BaseDir string
-	Options OptionConfig
-}
-
-type OptionConfig struct {
-	Verbose, Hidden bool
-}
-
-type AnalyzedFile struct {
-	FilePath  string
-	Content   *os.File
-	Locations []Location
-	Ok        bool
-}
-
-type Location struct {
-	LineNo   int
-	Contents string
-}
-
-// Print to stdout the info of the AnalyzedFile
-// e.x
-//
-//	fileName
-//	lineNumber: foundText
-func (f *AnalyzedFile) GetInfo() {
-	filePath := color.YellowString(f.FilePath)
-	fmt.Printf("\n%s\n", filePath)
-	for _, loc := range f.Locations {
-		lineNo := color.GreenString(fmt.Sprintf("%v", loc.LineNo))
-		fmt.Printf("%s:%s\n", lineNo, loc.Contents)
-	}
-}
 
 // Initializes a new Locator and returns a pointer to it. Supply "dir" with the desired base directory
 func NewLocator(dir string) *Locator {
@@ -81,45 +45,6 @@ func (l *Locator) Dig(text string) {
 	}
 
 	wg.Wait()
-}
-
-func findFiles(locator *Locator, fs []fs.DirEntry) ([]string, []string) {
-	var dirs []string
-	var files []string
-
-MainLoop:
-	for _, file := range fs {
-		// Check if a file is a directory or not and put them in the right slice
-		switch file.IsDir() {
-		case true:
-			// Check if we have enabled the option to search through hidden folders
-			if !locator.Options.Hidden && file.Name()[0] == '.' {
-				continue MainLoop
-			}
-			dirs = append(dirs, file.Name())
-		case false:
-			files = append(files, file.Name())
-		}
-	}
-
-	return dirs, files
-}
-
-func runAnalyze(locator *Locator, fileName, text string, wg *sync.WaitGroup) {
-	file := locator.Analyze(fileName, text)
-	defer wg.Done()
-
-	if !file.Ok {
-		return
-	}
-
-	file.GetInfo()
-}
-
-func runDig(locator *Locator, text string, wg *sync.WaitGroup) {
-	defer wg.Done()
-
-	locator.Dig(text)
 }
 
 // Use Analyze to open and scan the given file, fileName, and assert whether it contains the given string, text. If it does it is accumulated to a slice of AnalyzedFile and later returned

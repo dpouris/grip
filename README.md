@@ -1,3 +1,8 @@
+[![GoDoc](https://godoc.org/github.com/gomarkdown/markdown?status.svg)](https://pkg.go.dev/github.com/dpouris/grip)
+[![Go Report Card](https://goreportcard.com/badge/github.com/dpouris/grip)](https://goreportcard.com/report/github.com/dpouris/grip)
+[![License](https://img.shields.io/github/license/dpouris/gottp-server)](https://github.com/dpouris/gottp-server/blob/master/LICENSE)
+![Go version](https://img.shields.io/github/go-mod/go-version/dpouris/grip)
+
 ## Installation
 
 Inside the source directory, run the following command:

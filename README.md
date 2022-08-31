@@ -7,8 +7,12 @@ source install.sh zsh
 # or if you use bash run
 source install.sh bash
 ```
-
 It will build the binary file and put it in a bin folder on your `$HOME` dir.
+
+---
+
+**Note**: If you have already run the command and your *.rc file is already modified, you can run the command again but without the zsh/bash part in order to not have the function repeated in it. 
+
 
 ## Usage
 
@@ -21,13 +25,17 @@ It will build the binary file and put it in a bin folder on your `$HOME` dir.
 
 ```
 Usage:
-  
- 	grip <searchString> ( <searchDir> | . )
 
-	- searchString	  The desired text you want to search for
-
-	- searchDir   	  The directory in which you'd like to search for the specified text
+grip <searchString> ( <searchDir> | . ) [-opt]
 	
-	Alternatevely you can use [ . ] to search in the current directory
+Arguments:
+
+	<searchString>	  The desired text you want to search for
+
+	<searchDir>   	  The directory in which you'd like to search. Use '.' to search in the current directory
+
+Options:
+	
+	-h 			  Show hidden folders and files
 
 ```

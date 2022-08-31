@@ -55,16 +55,19 @@ func ParseArgs() (Arguments, bool) {
 func Usage() {
 	fmt.Println(
 		`
-		
-  Usage:
-  
- 	grip <searchString> ( <searchDir> | . )
+Usage:
 
-	- searchString	  The desired text you want to search for
-
-	- searchDir   	  The directory in which you'd like to search for the specified text
+grip <searchString> ( <searchDir> | . ) [-opt]
 	
-	Alternatevely you can use [ . ] to search in the current directory
+Arguments:
+
+	<searchString>	  The desired text you want to search for
+
+	<searchDir>   	  The directory in which you'd like to search. Use '.' to search in the current directory
+
+Options:
+	
+	-h 			  Show hidden folders and files
 
 	`,
 	)

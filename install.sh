@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Run cleanup
+source cleanup.sh
+
 # build binary
 go build -o out/
 
@@ -7,4 +10,4 @@ go build -o out/
 mkdir ~/bin && cp out/grip ~/bin/grip
 
 # create grip function and add to shell rc
-echo 'function grip() { ~/bin/grip $1 $2 }' >> ~/.$1rc
+echo 'function grip() { ~/bin/grip $1 $2 $3 }' >> ~/.$1rc

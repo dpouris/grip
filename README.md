@@ -3,6 +3,7 @@
 [![License](https://img.shields.io/github/license/dpouris/gottp-server)](https://github.com/dpouris/gottp-server/blob/master/LICENSE)
 ![Go version](https://img.shields.io/github/go-mod/go-version/dpouris/grip)
 
+![grip](./grip.gif)
 ## Installation
 
 Inside the source directory, run the following command:

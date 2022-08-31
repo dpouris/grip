@@ -3,7 +3,7 @@ package locator
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
+	"io/fs"
 	"os"
 	"strings"
 	"sync"
@@ -15,8 +15,13 @@ import (
 
 type Locator struct {
 	BaseDir string
-	Options map[string]bool
+	Options OptionConfig
 }
+
+type OptionConfig struct {
+	Verbose, Hidden bool
+}
+
 type AnalyzedFile struct {
 	FilePath  string
 	Content   *os.File
@@ -52,39 +57,19 @@ func NewLocator(dir string) *Locator {
 // Dig recursively searches through a directory and it's files to find the given string "text"
 func (l *Locator) Dig(text string) {
 	// Find all the subdirs inside the base dir
-	dirFs, err := ioutil.ReadDir(l.BaseDir)
+	fs, err := os.ReadDir(l.BaseDir)
 
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	var files []string
-	var dirs []string
-	for _, file := range dirFs {
-		if file.IsDir() {
-			if !l.Options["-h"] && file.Name()[0] == '.' {
-				continue
-			}
-			dirs = append(dirs, file.Name())
-			continue
-		}
+	dirs, files := findFiles(l, fs)
 
-		files = append(files, file.Name())
-	}
-
-	fileCh := make(chan AnalyzedFile, len(files))
 	wg := sync.WaitGroup{}
 
-	wg.Add(len(files))
 	for _, fileName := range files {
-		go runAnalyze(l, fileName, text, fileCh, &wg)
-	}
-
-	wg.Wait()
-	close(fileCh)
-
-	for file := range fileCh {
-		file.GetInfo()
+		wg.Add(1)
+		go runAnalyze(l, fileName, text, &wg)
 	}
 
 	for _, dir := range dirs {
@@ -98,7 +83,29 @@ func (l *Locator) Dig(text string) {
 	wg.Wait()
 }
 
-func runAnalyze(locator *Locator, fileName, text string, ch chan<- AnalyzedFile, wg *sync.WaitGroup) {
+func findFiles(locator *Locator, fs []fs.DirEntry) ([]string, []string) {
+	var dirs []string
+	var files []string
+
+MainLoop:
+	for _, file := range fs {
+		// Check if a file is a directory or not and put them in the right slice
+		switch file.IsDir() {
+		case true:
+			// Check if we have enabled the option to search through hidden folders
+			if !locator.Options.Hidden && file.Name()[0] == '.' {
+				continue MainLoop
+			}
+			dirs = append(dirs, file.Name())
+		case false:
+			files = append(files, file.Name())
+		}
+	}
+
+	return dirs, files
+}
+
+func runAnalyze(locator *Locator, fileName, text string, wg *sync.WaitGroup) {
 	file := locator.Analyze(fileName, text)
 	defer wg.Done()
 
@@ -106,7 +113,7 @@ func runAnalyze(locator *Locator, fileName, text string, ch chan<- AnalyzedFile,
 		return
 	}
 
-	ch <- file
+	file.GetInfo()
 }
 
 func runDig(locator *Locator, text string, wg *sync.WaitGroup) {

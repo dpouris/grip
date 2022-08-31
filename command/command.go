@@ -3,17 +3,20 @@ package command
 import (
 	"fmt"
 	"os"
+
+	"github.com/dpouris/grip/locator"
+	"github.com/fatih/color"
 )
 
 type Arguments struct {
 	SearchString string
 	Directory    string
-	Options      map[string]bool
+	Options      locator.OptionConfig
 }
 
 // ParseArgs uses os.Args and parses the flags provided. If the flags(n) given are 0=n<2 then we print the usage to stdout, else we parse, assert and return the args
 func ParseArgs() (Arguments, bool) {
-	if len(os.Args) <= 1 {
+	if len(os.Args) <= 2 {
 		Usage()
 		os.Exit(0)
 	}
@@ -67,7 +70,7 @@ Arguments:
 
 Options:
 	
-	-h 			  Show hidden folders and files
+	-h 			  	  Search hidden folders and files
 
 	`,
 	)
@@ -81,17 +84,17 @@ func validateDir(dir string) bool {
 	return err == nil
 }
 
-// Parses options/flags arguments given after path e.g -v, -h.
-func parseOpts(opts []string) map[string]bool {
-	options := map[string]bool{"-h": false, "-a": false}
+// Parses option/flag arguments given after path e.g -v, -h.
+func parseOpts(opts []string) locator.OptionConfig {
+	var options locator.OptionConfig
 	for _, opt := range opts {
 		switch opt {
 		case "-h":
-			options[opt] = true
-		case "-a":
-			options[opt] = true
+			options.Hidden = true
+		case "-v":
+			options.Verbose = true
 		default:
-			fmt.Printf("Unrecognized argument %s", opt)
+			color.Red("Unrecognized argument %s\n", opt)
 		}
 	}
 

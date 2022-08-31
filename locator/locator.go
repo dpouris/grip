@@ -60,20 +60,20 @@ func (l *Locator) Analyze(fileName string, text string) AnalyzedFile {
 	// var readFile string
 	// buffer := make([]byte, 10)
 	// for {
-	// 	writtenBytes, err := file.Read(buffer)
+	//      writtenBytes, err := file.Read(buffer)
 
-	// 	if err == io.EOF {
-	// 		break
-	// 	}
+	//      if err == io.EOF {
+	//              break
+	//      }
 
-	// 	readFile += string(buffer[:writtenBytes])
+	//      readFile += string(buffer[:writtenBytes])
 
-	// 	exists := strings.Contains(readFile, text)
+	//      exists := strings.Contains(readFile, text)
 
-	// 	if exists {
-	// 		resString := strings.Replace(readFile, text, color.RedString(text), -1)
-	// 		return &AnalyzedFile{FileName: fileName, Content: file, Read: resString, Ok: true}
-	// 	}
+	//      if exists {
+	//              resString := strings.Replace(readFile, text, color.RedString(text), -1)
+	//              return &AnalyzedFile{FileName: fileName, Content: file, Read: resString, Ok: true}
+	//      }
 
 	// }
 
